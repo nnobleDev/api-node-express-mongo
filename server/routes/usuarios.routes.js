@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const User = require('../models/usuarios');
+const jwt = require('jsonwebtoken');
 //REGISTRO
 router.post('/signup', function(req, res) {
    bcrypt.hash(req.body.password, 10, function(err, hash){
@@ -38,12 +39,21 @@ router.post('/signin', function(req, res){
        bcrypt.compare(req.body.password, user.password, function(err, result){
           if(err) {
              return res.status(401).json({
-                failed: 'No tiene autorizacion'
+                failed: 'Sin autorizacion'
              });
           }
           if(result) {
+             const JWTToken = jwt.sign({
+                email: user.email,
+                _id: user._id
+             },
+             'secret',
+                {
+                   expiresIn: '2h'
+                });
              return res.status(200).json({
-                success: 'Bienvenido'
+                success: 'Bienvenido',
+                token: JWTToken
              });
           }
           return res.status(401).json({
@@ -57,5 +67,4 @@ router.post('/signin', function(req, res){
        });
     });;
  });
-
 module.exports = router;
